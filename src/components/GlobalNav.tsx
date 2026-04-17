@@ -29,7 +29,7 @@ export function GlobalNav() {
 
   return (
     <header className="border-b border-stone-700 bg-stone-950/80 backdrop-blur">
-      <div className="max-w-6xl mx-auto px-4 py-2 flex items-center gap-4">
+      <div className="px-4 py-2 flex items-center gap-4">
         <div className="font-bold text-amber-200 tracking-wide">
           異世界<span className="text-rose-300">★</span>社長
           <span className="ml-2 text-xs text-stone-400">（仮）モック</span>
