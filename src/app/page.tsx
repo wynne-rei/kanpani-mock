@@ -282,23 +282,26 @@ function CharacterPortrait({
         : `/${image}`;
     return (
       <div
-        className="relative w-full max-w-xl overflow-hidden flex justify-center mx-auto"
-        style={{ height: "min(72vh, 620px)" }}
+        className="relative w-full mx-auto"
+        style={{ height: "min(75vh, 680px)", maxWidth: "min(100%, 880px)" }}
       >
-        {/* キャラ背後の発光 */}
+        {/* 発光は overflow制限なしで外側に広がる（矩形感を消す） */}
         <div
-          className="absolute inset-0 opacity-60 blur-3xl pointer-events-none"
+          className="absolute inset-0 blur-3xl pointer-events-none"
           style={{
-            background: `radial-gradient(circle at 50% 30%, ${color}88 0%, transparent 60%)`,
+            background: `radial-gradient(ellipse 60% 50% at 50% 40%, ${color}aa 0%, ${color}33 35%, transparent 70%)`,
           }}
         />
-        {/* バストアップ：画像を親の180%高さで上詰め、下半身を見切る */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={src}
-          alt={`${name}（${title}）`}
-          className="absolute top-0 left-1/2 -translate-x-1/2 h-[180%] max-h-none w-auto drop-shadow-[0_0_40px_rgba(0,0,0,0.7)]"
-        />
+        {/* 画像コンテナだけを overflow-hidden */}
+        <div className="absolute inset-0 overflow-hidden flex justify-center">
+          {/* 画像：親の165%高さで上詰め、腰から下を少し見切る（かんぱに社長室風の立ち絵寄り） */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={src}
+            alt={`${name}（${title}）`}
+            className="absolute top-0 h-[165%] max-h-none w-auto drop-shadow-[0_0_40px_rgba(0,0,0,0.75)]"
+          />
+        </div>
       </div>
     );
   }
