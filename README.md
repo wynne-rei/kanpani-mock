@@ -1,36 +1,127 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# かんぱに☆ガールズ 新作モック v1.5
 
-## Getting Started
+合意形成用プロトタイプ。**「キャラの生活そのもの」** を3画面で伝える。
 
-First, run the development server:
+## 🎯 このモックの狙い
+
+- 社内・共同企業（リモバ梨木さん、DMM、投資家）向け企画書替わり
+- 「配信ゲー」ではなく「**キャラの生活空間を覗き見＋介入**」という新しい体験の骨子を伝える
+- UNCHAINのTHIRDエコシステムに接続可能な第4タイトル候補として示す
+
+---
+
+## 🚀 起動方法
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# → http://localhost:3000 を開く
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 📺 3画面の構成
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### ① `/` ホーム画面
+- **体験**: キャラ（モニク／ローズ／ジークリット）が日替わりで出迎える
+- **見どころ**: ドルフロ2式のキャラ絵主体UI、時間帯別挨拶、PW（社長パワー）表示、各機能への入口
 
-## Learn More
+### ② `/shayoku` 社屋画面
+- **体験**: 会社全体＝社屋。キャラが各部署でちょこちょこ動く。**夏祭り切替トグルで街並み一変**
+- **見どころ**:
+  - 生活維持系3部署（食堂・医務室・寮）＋経営系3部署（人事部・経理部・広報部）
+  - 戦闘系（傭兵派遣部）は**意図的に外した**＝社屋は日常の場
+  - 夏祭り！トグル＝運営の芸が1クリックで乗る器
 
-To learn more about Next.js, take a look at the following resources:
+### ③ `/battle` 戦闘画面
+- **体験**: 放置型・キャラ自律AI戦闘・スキルカットイン・社長スキル5スロット介入
+- **見どころ**:
+  - 敵量産（モブ）× 味方少数精鋭（個性あるキャラ）の非対称
+  - aggressive/tactical/defensive/support の AI個性が画面上で確認できる
+  - 社長スキル（原作踏襲：PW1分1回復、コスト重い）
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 📝 このモックで「やっていないこと」（意図）
 
-## Deploy on Vercel
+- **実キャラ画像**：プレースホルダー（シルエット+仮色）。権利確認後に差替（v2）
+- **サウンド**：無音（v2）
+- **履歴書ガチャ/市場/闇金 の本格UI**：メニュー枠のみ（v2）
+- **スマホ最適化**：PC想定のレイアウト優先（v2）
+- **THIRD連携UI**：骨格は介入点を備える設計だが、視聴者介入の実装はv2
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 🛠 技術スタック
+
+- Next.js 16（App Router）
+- TypeScript
+- Tailwind CSS v4
+- PixiJS v8（社屋/戦闘のキャンバス描画）
+
+### ソース構成
+
+```
+src/
+├── app/
+│   ├── layout.tsx        全体レイアウト（ナビ、時計）
+│   ├── page.tsx          ホーム（ドルフロ2式）
+│   ├── shayoku/page.tsx  社屋
+│   └── battle/page.tsx   戦闘
+├── components/
+│   ├── GlobalNav.tsx     ヘッダーナビ
+│   ├── ShayokuCanvas.tsx 社屋PixiJS
+│   └── BattleCanvas.tsx  戦闘PixiJS
+└── data/
+    ├── characters.ts     キャラ定義（モニク/ローズ/ジークリット+プレースホルダー3）
+    └── departments.ts    部署定義（生活維持3+経営3）
+```
+
+---
+
+## 🌐 Vercelへのデプロイ（レイさん手動でお願いします）
+
+Claude から直接デプロイできなかったので、手動でお願いします：
+
+```bash
+# 初回：Vercelログイン
+npx vercel login
+# → メールで認証
+
+# デプロイ
+npx vercel
+# → 設定質問に回答（基本デフォルトOK：Which scope? / link existing? N / project name? / which directory? ./ / override settings? N）
+# → Preview URL を取得
+
+# 本番デプロイ（URL固定）
+npx vercel --prod
+```
+
+URLが取れたら社内・梨木さん・DMM等に共有。
+
+---
+
+## 🔀 このモックから v2 への発展方向
+
+1. かんぱに実キャラ立ち絵に差替
+2. ホワサバ風ビジュアルの本格作り込み（現状はPixiJS Graphicsのプレースホルダー）
+3. 履歴書ガチャの本格UI（ルカクリック→3枚履歴書→選択）
+4. 闇金かんぱに！の借入画面
+5. **THIRD連携UI**：視聴者アイコン、投げ銭UI、介入ボタン
+6. スマホ最適化
+7. 音楽・SE
+8. 14日サイクルイベントのバリエーション（水着・浴衣等）
+
+---
+
+## 📋 仕様参照
+
+企画の経緯と詳細は以下を参照：
+
+- `../tasks/kanpani_mock_todo.md` — 実装プラン
+- Claude メモリー `project_kanpani_new.md` — 企画骨格の議論履歴
+- Claude メモリー `project_third.md` — THIRD（UNCHAIN事業）との関係
+
+---
+
+作成: 2026-04-17
