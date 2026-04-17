@@ -222,17 +222,16 @@ export function ShayokuCanvas({
           lukaSprite.position.set(hrB.container.x - 40, hrB.container.y + 90);
         }
       };
-      // 初回レイアウト：flexのサイズ確定を待つため次フレームで実行
-      requestAnimationFrame(() => {
-        if (appRef.current) {
-          appRef.current.resize(); // Pixi のレンダラーを host に合わせる
-          layout();
-        }
-      });
-
-      const ro = new ResizeObserver(() => {
-        if (appRef.current) {
-          appRef.current.resize(); // リサイズのたびに Pixi も追従
+      // ResizeObserver で host の実サイズを確実に追跡
+      // （Pixi v8 の resizeTo は window リサイズしか追わないため、
+      //  flex子要素の host サイズ変動に明示的に追従させる）
+      const ro = new ResizeObserver((entries) => {
+        if (!appRef.current) return;
+        const entry = entries[0];
+        const w = entry.contentRect.width;
+        const h = entry.contentRect.height;
+        if (w > 0 && h > 0) {
+          appRef.current.renderer.resize(w, h);
           layout();
         }
       });
