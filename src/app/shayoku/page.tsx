@@ -50,7 +50,7 @@ export default function ShayokuPage() {
   const phaseInfo = PHASE_LABEL[phase];
 
   return (
-    <div className="flex-1 flex flex-col p-4 max-w-6xl mx-auto w-full gap-3">
+    <div className="flex-1 flex flex-col p-4 w-full gap-3">
       {/* ヘッダー */}
       <div className="flex items-center gap-3 flex-wrap">
         <h1 className="text-lg font-bold text-amber-200">社屋</h1>
