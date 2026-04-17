@@ -6,20 +6,18 @@ import { CHARACTERS, getGreetingKey } from "@/data/characters";
 
 export default function HomePage() {
   const [hour, setHour] = useState<number>(() => new Date().getHours());
-  const [dayIndex, setDayIndex] = useState<number>(
-    () => Math.floor(Date.now() / 86400000) % CHARACTERS.length
-  );
 
   useEffect(() => {
     const id = setInterval(() => {
-      const now = new Date();
-      setHour(now.getHours());
-      setDayIndex(Math.floor(Date.now() / 86400000) % CHARACTERS.length);
+      setHour(new Date().getHours());
     }, 60_000);
     return () => clearInterval(id);
   }, []);
 
-  const greeter = CHARACTERS[dayIndex];
+  // ホーム画面のメインキャラはモニク固定
+  // （レイさん指定／実画像がある看板キャラ）
+  const greeter =
+    CHARACTERS.find((c) => c.id === "monique") ?? CHARACTERS[0];
   const greeting = greeter.greeting[getGreetingKey(hour)];
 
   const [pw, setPw] = useState(72);
