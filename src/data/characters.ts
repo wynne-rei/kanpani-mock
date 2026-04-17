@@ -17,6 +17,8 @@ export interface Character {
   title: string;
   /** プレースホルダー用の色（Tailwindクラス互換の16進） */
   color: string;
+  /** 実画像パス（あれば）。無い場合はSVGプレースホルダーで描画 */
+  image?: string;
   department: Department;
   greeting: {
     morning: string;
@@ -34,7 +36,8 @@ export const CHARACTERS: Character[] = [
     name: "モニク",
     job: "sword",
     title: "聖装モニク",
-    color: "#f5b7c2", // pink
+    color: "#d4c5f0", // lavender（実画像の髪色基調）
+    image: "characters/monique.png",
     department: "hr",
     greeting: {
       morning: "社長、おはようございます。今日もよろしくお願いします",
@@ -66,7 +69,8 @@ export const CHARACTERS: Character[] = [
     name: "ジークリット",
     job: "axe",
     title: "竜公",
-    color: "#7b68c8", // purple
+    color: "#9a85d6", // purple（実画像の髪色基調）
+    image: "characters/siegrit.png",
     department: "dormitory",
     greeting: {
       morning: "社長、おはよう。本日の任務を確認した",

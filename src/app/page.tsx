@@ -43,7 +43,12 @@ export default function HomePage() {
     <div className="flex-1 flex flex-col lg:flex-row gap-4 p-4 max-w-6xl mx-auto w-full">
       {/* 左：キャラ立ち絵エリア */}
       <section className="flex-1 min-h-[480px] relative rounded-xl overflow-hidden border border-stone-700 bg-gradient-to-b from-indigo-950 via-stone-900 to-stone-950">
-        <CharacterPortrait name={greeter.name} color={greeter.color} title={greeter.title} />
+        <CharacterPortrait
+          name={greeter.name}
+          color={greeter.color}
+          title={greeter.title}
+          image={greeter.image}
+        />
 
         {/* 吹き出し */}
         <div className="absolute bottom-6 left-6 right-6 bg-stone-950/85 backdrop-blur border border-amber-200/40 rounded-lg px-5 py-4 shadow-lg">
@@ -55,9 +60,11 @@ export default function HomePage() {
           </div>
         </div>
 
-        <div className="absolute top-3 right-3 text-[10px] text-stone-500 bg-stone-950/60 px-2 py-0.5 rounded">
-          プレースホルダー（実キャラ画像 v2 差替）
-        </div>
+        {!greeter.image && (
+          <div className="absolute top-3 right-3 text-[10px] text-stone-500 bg-stone-950/60 px-2 py-0.5 rounded">
+            プレースホルダー（実キャラ画像 v2 差替）
+          </div>
+        )}
       </section>
 
       {/* 右：社長ステータス＋メニュー */}
@@ -122,11 +129,39 @@ function CharacterPortrait({
   name,
   color,
   title,
+  image,
 }: {
   name: string;
   color: string;
   title: string;
+  image?: string;
 }) {
+  // 実画像あり：ほぼ全画面表示＋柔らかいグロー
+  if (image) {
+    const src = process.env.NODE_ENV === "production"
+      ? `/isekai-shachou-mock/${image}`
+      : `/${image}`;
+    return (
+      <div className="absolute inset-0 flex items-center justify-center">
+        {/* ドロップシャドウのための発光リング */}
+        <div
+          className="absolute inset-0 opacity-50 blur-3xl"
+          style={{
+            background: `radial-gradient(circle at center, ${color}44 0%, transparent 60%)`,
+          }}
+        />
+        {/* 本画像 */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={src}
+          alt={`${name}（${title}）`}
+          className="h-full max-h-[560px] object-contain drop-shadow-[0_0_40px_rgba(0,0,0,0.6)]"
+        />
+      </div>
+    );
+  }
+
+  // 画像なし：SVGプレースホルダー
   return (
     <div className="absolute inset-0 flex items-end justify-center pb-32">
       <svg

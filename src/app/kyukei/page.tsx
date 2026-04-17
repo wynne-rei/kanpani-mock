@@ -224,6 +224,42 @@ function PoseCharacter({
   pose: Pose;
   onTouch: (spot: ReactionSpot) => void;
 }) {
+  // 実画像あり：画像をベースにタッチポイントをオーバーレイ
+  if (char.image) {
+    const src =
+      process.env.NODE_ENV === "production"
+        ? `/isekai-shachou-mock/${char.image}`
+        : `/${char.image}`;
+    return (
+      <div className="absolute inset-0 flex items-center justify-center">
+        <div
+          className="absolute inset-0 opacity-50 blur-3xl pointer-events-none"
+          style={{
+            background: `radial-gradient(circle at center, ${char.color}44 0%, transparent 65%)`,
+          }}
+        />
+        <div className="relative h-full max-h-[500px] aspect-square">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={src}
+            alt={`${char.name}（${char.title}）`}
+            className="h-full w-full object-contain drop-shadow-[0_0_40px_rgba(0,0,0,0.6)]"
+          />
+          {/* タッチポイント（%ベース配置） */}
+          <TouchOverlay spot="head" onTouch={onTouch} style={{ top: "12%", left: "45%", width: "20%", height: "18%" }} label="頭" />
+          <TouchOverlay spot="cheek" onTouch={onTouch} style={{ top: "25%", left: "40%", width: "12%", height: "10%" }} label="頬" />
+          <TouchOverlay spot="shoulder" onTouch={onTouch} style={{ top: "32%", left: "30%", width: "40%", height: "12%" }} label="肩" />
+          <TouchOverlay spot="hand" onTouch={onTouch} style={{ top: "42%", left: "15%", width: "18%", height: "18%" }} label="手" />
+        </div>
+        {/* 下部の注記 */}
+        <div className="absolute bottom-14 left-1/2 -translate-x-1/2 text-[10px] text-stone-400 bg-stone-950/80 px-2 py-1 rounded pointer-events-none">
+          ※ ポーズ別画像は v2 で差替。現在は1ポーズのみ表示、リアクションはポーズ別に変化
+        </div>
+      </div>
+    );
+  }
+
+  // 画像なし：SVGプレースホルダー
   return (
     <div className="absolute inset-0 flex items-end justify-center pb-8">
       <svg
@@ -240,6 +276,28 @@ function PoseCharacter({
         {pose === "stretching" && <StretchingPose color={char.color} onTouch={onTouch} />}
       </svg>
     </div>
+  );
+}
+
+function TouchOverlay({
+  spot,
+  onTouch,
+  style,
+  label,
+}: {
+  spot: ReactionSpot;
+  onTouch: (s: ReactionSpot) => void;
+  style: React.CSSProperties;
+  label: string;
+}) {
+  return (
+    <button
+      onClick={() => onTouch(spot)}
+      className="absolute rounded-full border-2 border-white/20 border-dashed hover:border-amber-300 hover:bg-amber-300/10 transition cursor-pointer"
+      style={style}
+      title={label}
+      aria-label={label}
+    />
   );
 }
 
