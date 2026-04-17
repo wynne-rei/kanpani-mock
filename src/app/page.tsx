@@ -101,11 +101,11 @@ export default function HomePage() {
           <div className="text-xs text-stone-400 mb-2">メニュー</div>
           <div className="grid grid-cols-2 gap-2">
             <MenuBtn href="/shayoku" label="🏢 社屋へ" primary />
-            <MenuBtn href="/battle" label="⚔️ 傭兵派遣" primary />
             <MenuBtn href="#" label="📄 履歴書ガチャ" disabled />
             <MenuBtn href="#" label="🏪 市場" disabled />
             <MenuBtn href="#" label="💰 闇金かんぱに！" disabled />
             <MenuBtn href="#" label="🎆 夏祭り！" disabled />
+            <MenuBtn href="#" label="📮 派遣（v2）" disabled />
           </div>
           <div className="text-[10px] text-stone-500 mt-2">
             ※ 灰色のボタンは v2 以降で実装予定

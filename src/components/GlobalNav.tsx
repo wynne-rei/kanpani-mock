@@ -6,8 +6,7 @@ import { useEffect, useState } from "react";
 
 const NAV_ITEMS = [
   { href: "/", label: "🏠 ホーム" },
-  { href: "/shayoku", label: "🏢 社屋" },
-  { href: "/battle", label: "⚔️ 傭兵派遣（戦闘）" },
+  { href: "/shayoku", label: "🏢 社屋（日常＋襲来）" },
 ];
 
 export function GlobalNav() {
