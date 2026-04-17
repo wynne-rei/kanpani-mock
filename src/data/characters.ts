@@ -37,7 +37,7 @@ export const CHARACTERS: Character[] = [
     job: "sword",
     title: "聖装モニク",
     color: "#d4c5f0", // lavender（実画像の髪色基調）
-    image: "characters/monique.png",
+    image: "characters/monique_v2.png",
     department: "hr",
     greeting: {
       morning: "社長、おはようございます。今日もよろしくお願いします",
