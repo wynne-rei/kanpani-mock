@@ -249,21 +249,22 @@ export function ShayokuCanvas({
           onPhaseChange("warning");
           spawnTextBanner(cutinLayer, W, H, "⚠️ 襲来予兆！", 0xff6060, 60);
         } else if (s.phase === "warning" && s.phaseTimer <= 0) {
-          // 襲来開始
+          // 襲来開始（わちゃわちゃに）
           s.phase = "raid";
           s.raidCount += 1;
-          const enemyCount = 6 + s.raidCount * 2;
+          const enemyCount = 20 + s.raidCount * 6; // 元: 6+raidCount*2 → 大量投入
           for (let i = 0; i < enemyCount; i++) {
             setTimeout(() => {
               if (stateRef.current?.phase !== "raid") return;
               const e = spawnEnemy(W, H);
               enemyLayer.addChild(e.sprite);
               stateRef.current.enemies.push(e);
-            }, i * 250);
+            }, i * 80); // 元: 250 → 高速スポーン
           }
-          s.phaseTimer = 60; // 最大60秒
+          s.phaseTimer = 60;
           onPhaseChange("raid");
           spawnTextBanner(cutinLayer, W, H, `🗡️ 襲来開始！ (第${s.raidCount}回)`, 0xff3030, 70);
+          triggerScreenShake(stage, 10, 30);
         } else if (s.phase === "raid") {
           // 敵全滅 or タイマー切れで撃退判定
           if (s.enemies.length === 0 && s.phaseTimer < 57) {
@@ -354,39 +355,55 @@ export function ShayokuCanvas({
               ref.targetY = homeY;
             }
 
-            // 攻撃
+            // 攻撃（わちゃわちゃ化：CD短縮、ダメージUP、爆発演出）
             ref.attackCd -= dt;
             if (ref.attackCd <= 0 && nearest) {
               const n: Enemy = nearest;
               const range =
                 ref.personality === "support"
-                  ? 220
+                  ? 240
                   : ref.personality === "aggressive"
-                  ? 50
-                  : 90;
+                  ? 60
+                  : 100;
               if (nearestDist < range) {
                 spawnAttackFx(fxLayer, ref.x, ref.y, n.x, n.y, ref.charColor);
-                n.hp -= 30 + s.buffs.atk * 40;
+                const dmg = 35 + s.buffs.atk * 50 + Math.random() * 10;
+                const isCrit = Math.random() < (0.15 + s.buffs.crit * 0.3);
+                const finalDmg = Math.round(isCrit ? dmg * 2 : dmg);
+                n.hp -= finalDmg;
+                spawnDamageText(fxLayer, n.x, n.y, finalDmg, isCrit);
                 if (n.hp <= 0) {
+                  spawnEnemyDeathFx(fxLayer, n.x, n.y);
                   enemyLayer.removeChild(n.sprite);
                   s.enemies = s.enemies.filter((x) => x !== n);
                 }
-                ref.attackCd = 40 + Math.random() * 20;
+                ref.attackCd = 18 + Math.random() * 10; // 元: 40+random*20 → 高速
               }
             }
 
-            // スキル
+            // スキル（頻度UP、範囲拡大、爆発演出）
             ref.skillCd -= dtSec;
             if (ref.skillCd <= 0 && s.enemies.length > 0) {
               spawnSkillCutin(cutinLayer, app, ref.charName, ref.skillName, ref.charColor);
-              s.enemies.slice(0, 3).forEach((en) => {
-                en.hp -= 80;
-                if (en.hp <= 0) {
-                  enemyLayer.removeChild(en.sprite);
-                  s.enemies = s.enemies.filter((x) => x !== en);
+              triggerScreenShake(stage, 4, 12);
+              // 自分周辺の敵に範囲ダメージ
+              const skillTargets = s.enemies
+                .map((en) => ({ en, d: Math.hypot(en.x - ref.x, en.y - ref.y) }))
+                .filter((t) => t.d < 180)
+                .sort((a, b) => a.d - b.d)
+                .slice(0, 6);
+              skillTargets.forEach((t) => {
+                const dmg = 80 + s.buffs.atk * 60;
+                t.en.hp -= dmg;
+                spawnExplosion(fxLayer, t.en.x, t.en.y, colorToNumber(ref.charColor));
+                spawnDamageText(fxLayer, t.en.x, t.en.y - 10, Math.round(dmg), true);
+                if (t.en.hp <= 0) {
+                  spawnEnemyDeathFx(fxLayer, t.en.x, t.en.y);
+                  enemyLayer.removeChild(t.en.sprite);
+                  s.enemies = s.enemies.filter((x) => x !== t.en);
                 }
               });
-              ref.skillCd = 15 + Math.random() * 8;
+              ref.skillCd = 8 + Math.random() * 4; // 元: 15+random*8 → 頻繁
             }
           } else {
             // 日常モード：部署前をうろうろ
@@ -655,7 +672,121 @@ function spawnEnemy(W: number, H: number): Enemy {
   c.addChild(eye);
   c.position.set(x, y);
 
-  return { sprite: c, x, y, hp: 70 };
+  return { sprite: c, x, y, hp: 40 }; // わちゃわちゃ化：サクサク倒せる
+}
+
+/* ---------- 派手エフェクト群（v2 爽快感強化） ---------- */
+
+function spawnDamageText(layer: Container, x: number, y: number, dmg: number, crit: boolean) {
+  const t = new Text({
+    text: crit ? `CRIT! ${dmg}` : `${dmg}`,
+    style: new TextStyle({
+      fontSize: crit ? 20 : 14,
+      fill: crit ? 0xffe040 : 0xffffff,
+      fontWeight: "bold",
+      stroke: { color: crit ? 0xa02020 : 0x000000, width: crit ? 4 : 3 },
+    }),
+  });
+  t.anchor.set(0.5);
+  t.position.set(x + (Math.random() - 0.5) * 20, y - 20);
+  layer.addChild(t);
+
+  let life = 0;
+  const id = setInterval(() => {
+    life += 1;
+    t.y -= 1.2;
+    if (life > 15) t.alpha -= 0.08;
+    if (t.alpha <= 0) {
+      clearInterval(id);
+      layer.removeChild(t);
+      t.destroy();
+    }
+  }, 30);
+}
+
+function spawnEnemyDeathFx(layer: Container, x: number, y: number) {
+  // パーティクル爆発：8方向に粒子
+  const particles: { g: Graphics; vx: number; vy: number; life: number }[] = [];
+  for (let i = 0; i < 10; i++) {
+    const g = new Graphics();
+    const color = [0xff6040, 0xff9020, 0xffd040, 0xffffff][Math.floor(Math.random() * 4)];
+    g.circle(0, 0, 2 + Math.random() * 3).fill(color);
+    g.position.set(x, y);
+    layer.addChild(g);
+    const angle = (Math.PI * 2 * i) / 10 + Math.random() * 0.3;
+    particles.push({
+      g,
+      vx: Math.cos(angle) * (2 + Math.random() * 3),
+      vy: Math.sin(angle) * (2 + Math.random() * 3) - 1,
+      life: 20,
+    });
+  }
+  // 中央の光
+  const flash = new Graphics();
+  flash.circle(0, 0, 18).fill({ color: 0xffe080, alpha: 0.9 });
+  flash.position.set(x, y);
+  layer.addChild(flash);
+
+  const id = setInterval(() => {
+    flash.scale.x *= 1.15;
+    flash.scale.y *= 1.15;
+    flash.alpha -= 0.12;
+    particles.forEach((p) => {
+      p.g.x += p.vx;
+      p.g.y += p.vy;
+      p.vy += 0.15;
+      p.life -= 1;
+      p.g.alpha = p.life / 20;
+    });
+    if (flash.alpha <= 0) {
+      clearInterval(id);
+      layer.removeChild(flash);
+      flash.destroy();
+      particles.forEach((p) => {
+        layer.removeChild(p.g);
+        p.g.destroy();
+      });
+    }
+  }, 30);
+}
+
+function spawnExplosion(layer: Container, x: number, y: number, color: number) {
+  // スキルヒット時の派手な爆発
+  const g = new Graphics();
+  g.circle(0, 0, 20).fill({ color, alpha: 0.9 });
+  g.circle(0, 0, 10).fill({ color: 0xffffff, alpha: 0.8 });
+  g.position.set(x, y);
+  layer.addChild(g);
+
+  let t = 0;
+  const id = setInterval(() => {
+    t += 1;
+    g.scale.x = 1 + t * 0.15;
+    g.scale.y = 1 + t * 0.15;
+    g.alpha -= 0.08;
+    if (g.alpha <= 0) {
+      clearInterval(id);
+      layer.removeChild(g);
+      g.destroy();
+    }
+  }, 30);
+}
+
+function triggerScreenShake(stage: Container, amplitude: number, frames: number) {
+  let f = 0;
+  const origX = stage.x;
+  const origY = stage.y;
+  const id = setInterval(() => {
+    f += 1;
+    const decay = 1 - f / frames;
+    stage.x = origX + (Math.random() - 0.5) * amplitude * decay;
+    stage.y = origY + (Math.random() - 0.5) * amplitude * decay;
+    if (f >= frames) {
+      clearInterval(id);
+      stage.x = origX;
+      stage.y = origY;
+    }
+  }, 16);
 }
 
 function spawnAttackFx(
@@ -666,21 +797,43 @@ function spawnAttackFx(
   y2: number,
   color: string
 ) {
+  const n = colorToNumber(color);
+
+  // 光の筋（太め）
   const line = new Graphics();
   line.moveTo(x1, y1).lineTo(x2, y2).stroke({
-    width: 3,
-    color: colorToNumber(color),
+    width: 4,
+    color: n,
     alpha: 0.9,
   });
+  // 白い芯
+  line.moveTo(x1, y1).lineTo(x2, y2).stroke({
+    width: 1.5,
+    color: 0xffffff,
+    alpha: 1,
+  });
   layer.addChild(line);
-  let alpha = 1;
+
+  // 命中点の円形閃光
+  const hit = new Graphics();
+  hit.circle(0, 0, 8).fill({ color: n, alpha: 0.9 });
+  hit.circle(0, 0, 4).fill({ color: 0xffffff, alpha: 1 });
+  hit.position.set(x2, y2);
+  layer.addChild(hit);
+
+  let t = 0;
   const id = setInterval(() => {
-    alpha -= 0.1;
-    line.alpha = alpha;
-    if (alpha <= 0) {
+    t += 1;
+    line.alpha -= 0.18;
+    hit.scale.x = 1 + t * 0.2;
+    hit.scale.y = 1 + t * 0.2;
+    hit.alpha -= 0.15;
+    if (line.alpha <= 0 && hit.alpha <= 0) {
       clearInterval(id);
       layer.removeChild(line);
+      layer.removeChild(hit);
       line.destroy();
+      hit.destroy();
     }
   }, 30);
 }
@@ -791,10 +944,11 @@ function applyCommanderSkill(
   enemyLayer: Container
 ) {
   spawnSkillCutin(cutinLayer, app, "社長", skill.label, "#e8b050");
+  triggerScreenShake(app.stage, 6, 15);
 
   switch (skill.type) {
     case "heal":
-      // モックでは演出のみ（キャラHPは実装省略）
+      // 全体に光エフェクト
       break;
     case "attack_up":
       s.buffs.atk = 1;
@@ -806,11 +960,17 @@ function applyCommanderSkill(
       s.buffs.crit = 1;
       break;
     case "ult":
+      // 奥義：全敵爆発演出付き消滅
       s.enemies.forEach((e) => {
-        e.hp -= 999;
+        spawnEnemyDeathFx(
+          (enemyLayer.parent as Container).getChildAt(5) as Container, // fxLayer
+          e.x,
+          e.y
+        );
+        enemyLayer.removeChild(e.sprite);
       });
-      s.enemies.forEach((e) => enemyLayer.removeChild(e.sprite));
       s.enemies = [];
+      triggerScreenShake(app.stage, 15, 30);
       break;
   }
 }
